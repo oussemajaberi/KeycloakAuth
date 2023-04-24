@@ -1,8 +1,12 @@
 package com.example.keycloakauth.configuration;
 
 
-import lombok.Getter;
 
+
+import com.mashape.unirest.http.JsonNode;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
+import lombok.Getter;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
@@ -19,7 +23,8 @@ public class KeycloakProvider {
     public String realm;
     @Value("${keycloak.resource}")
     public String clientID;
-
+    @Value("${keycloak.credentials.secret}")
+    public String clientSecret;
 
     private static Keycloak keycloak = null;
 
@@ -33,6 +38,7 @@ public class KeycloakProvider {
                     .realm(realm)
                     .serverUrl(serverURL)
                     .clientId(clientID)
+                     .clientSecret(clientSecret)
                     .grantType(OAuth2Constants.CLIENT_CREDENTIALS)
                     .build();
         }
@@ -45,18 +51,19 @@ public class KeycloakProvider {
                 .realm(realm) //
                 .serverUrl(serverURL)//
                 .clientId(clientID) //
+                .clientSecret(clientSecret) //
                 .username(username) //
                 .password(password);
     }
 
-    //public JsonNode refreshToken(String refreshToken) throws UnirestException {
-        //String url = serverURL + "/realms/" + realm + "/protocol/openid-connect/token";
-        //return Unirest.post(url)
-          //      .header("Content-Type", "application/x-www-form-urlencoded")
-            //    .field("client_id", clientID)
-               // .field("client_secret", clientSecret)
-                //.field("refresh_token", refreshToken)
-                //.field("grant_type", "refresh_token")
-                //.asJson().getBody();
-    //}
+    public JsonNode refreshToken(String refreshToken) throws UnirestException {
+        String url = serverURL + "/realms/" + realm + "/protocol/openid-connect/token";
+        return Unirest.post(url)
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .field("client_id", clientID)
+                .field("client_secret", clientSecret)
+                .field("refresh_token", refreshToken)
+                .field("grant_type", "refresh_token")
+                .asJson().getBody();
+    }
 }
